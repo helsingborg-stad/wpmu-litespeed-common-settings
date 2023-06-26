@@ -31,7 +31,47 @@ class WPMULitespeedCommonSettings
   {
     add_action('init', array($this, 'initDB'));
     add_action('init', array($this, 'applyOptionFilters'));
+    add_action('admin_init', array($this, 'removeOptionsPage'), 99999);
   }
+
+  /**
+   * Removes the LiteSpeed Options page from the WordPress admin menu.
+   * This function is only executed on subsites, not the main site.
+   */
+  public function removeOptionsPage() {
+
+    // Check if it's the main site
+    if (is_main_site()) {
+      return;
+    }
+
+    //Hide "Settings → LiteSpeed Cache".
+    remove_submenu_page('options-general.php', 'litespeed-cache-options');
+
+    //Hide "LiteSpeed Cache".
+    remove_menu_page('litespeed');
+    //Hide "LiteSpeed Cache → Dashboard".
+    remove_submenu_page('litespeed', 'litespeed');
+    //Hide "LiteSpeed Cache → Presets".
+    remove_submenu_page('litespeed', 'litespeed-presets');
+    //Hide "LiteSpeed Cache → General".
+    remove_submenu_page('litespeed', 'litespeed-general');
+    //Hide "LiteSpeed Cache → Cache".
+    remove_submenu_page('litespeed', 'litespeed-cache');
+    //Hide "LiteSpeed Cache → CDN".
+    remove_submenu_page('litespeed', 'litespeed-cdn');
+    //Hide "LiteSpeed Cache → Image Optimization".
+    remove_submenu_page('litespeed', 'litespeed-img_optm');
+    //Hide "LiteSpeed Cache → Page Optimization".
+    remove_submenu_page('litespeed', 'litespeed-page_optm');
+    //Hide "LiteSpeed Cache → Database".
+    remove_submenu_page('litespeed', 'litespeed-db_optm');
+    //Hide "LiteSpeed Cache → Crawler".
+    remove_submenu_page('litespeed', 'litespeed-crawler');
+    //Hide "LiteSpeed Cache → Toolbox".
+    remove_submenu_page('litespeed', 'litespeed-toolbox');
+  }
+
 
   /**
    * Initializes the WordPress database object.
