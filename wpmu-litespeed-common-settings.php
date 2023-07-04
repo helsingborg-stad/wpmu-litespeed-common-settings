@@ -101,7 +101,7 @@ class WPMULitespeedCommonSettings
 
         add_filter('option_' . $optionName, function ($value, $option) use ($optionValue) {
           return $optionValue;
-        });
+        }, 10, 2);
       }
     }
   }
