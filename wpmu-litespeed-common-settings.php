@@ -29,9 +29,13 @@ class WPMULitespeedCommonSettings
    */
   public function __construct()
   {
-    add_action('init', array($this, 'initDB'));
-    add_action('init', array($this, 'applyOptionFilters'));
-    add_action('admin_init', array($this, 'removeOptionsPage'), 99999);
+    add_action('admin_init', [$this, 'removeOptionsPage']);
+    add_action('admin_init', function(){
+      if($this->shouldPropagateSettings()) {
+        $this->initDB();
+        $this->propagateOptions(); 
+      }
+    }, PHP_INT_MAX); 
   }
 
   /**
@@ -72,7 +76,6 @@ class WPMULitespeedCommonSettings
     remove_submenu_page('litespeed', 'litespeed-toolbox');
   }
 
-
   /**
    * Initializes the WordPress database object.
    * @return void
@@ -83,27 +86,52 @@ class WPMULitespeedCommonSettings
   }
 
   /**
-   * Applies option filters to retrieve LiteSpeed options for non-main sites.
-   * @return void
+   * Determine if action should trigger propagation.
    */
-  public function applyOptionFilters()
-  {
-    if (is_main_site()) {
-      return;
-    }
-
-    $options = $this->getLiteSpeedOptionKeys();
-
-    if ($options && !empty($options)) {
-      foreach ($options as $option) {
-        $optionValue = $option->option_value;
-        $optionName  = $option->option_name;
-
-        add_filter('option_' . $optionName, function ($value, $option) use ($optionValue) {
-          return $optionValue;
-        }, 10, 2);
+  private function shouldPropagateSettings():bool {
+    if(isset($_GET['page']) && $_GET['page'] == "litespeed-cache") {
+      if(isset($_POST['litespeed-submit']) && !empty($_POST['litespeed-submit'])) {
+        return true;
       }
     }
+    return false;
+  }
+
+  /**
+   * Propagates options to different sites.
+   * @return void
+   */
+  public function propagateOptions() {
+    $options  = $this->getLiteSpeedOptionKeys();
+    $sites    = $this->getSites();
+
+    if(is_array($sites) && !empty($sites)) {
+      
+      foreach($sites as $key => $site) {
+        if(!$key) {
+          continue;
+        }
+        switch_to_blog($site->blog_id);
+          if(is_array($options) && !empty($options)) {
+            foreach($options as $option) {
+              update_option($option->option_name, $option->option_value);
+            }
+          }
+        restore_current_blog(); 
+      }
+    }
+  } 
+
+  /**
+   * Retrieves a list of sites.
+   * @return array An array of site objects.
+   */
+  private function getSites() {
+    return get_sites(
+      [
+        'number' => PHP_INT_MAX
+      ]
+    );
   }
 
   /**
