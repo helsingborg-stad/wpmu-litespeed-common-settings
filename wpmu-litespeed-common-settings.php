@@ -44,8 +44,10 @@ class WPMULitespeedCommonSettings
    */
   public function removeOptionsPage() {
 
+    global $menu;
+
     // Check if it's the main site
-    if (is_main_site()) {
+    if (is_main_site() || empty($menu)) {
       return;
     }
 
